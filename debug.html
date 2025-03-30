@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nokia Cricket Game - Debug Mode</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background-color: #222;
+            color: white;
+        }
+        
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 100;
+        }
+        
+        #debug-output {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            width: 300px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 100;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #388E3C;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h2>Nokia Cricket Game - Debug Mode</h2>
+        <div>
+            <button id="init-three">1. Init Three.js</button>
+            <button id="create-scene">2. Create Scene</button>
+            <button id="init-cannon">3. Init Physics</button>
+            <button id="create-ball">4. Create Ball</button>
+            <button id="start-animation">5. Start Animation</button>
+            <button id="reset">Reset</button>
+        </div>
+    </div>
+    
+    <div id="debug-output"></div>
+
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cannon@0.6.2/build/cannon.min.js"></script>
+    
+    <script>
+        // Debug logging
+        const debugOutput = document.getElementById('debug-output');
+        function log(message) {
+            const line = document.createElement('div');
+            line.textContent = message;
+            debugOutput.appendChild(line);
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+            console.log(message);
+        }
+        
+        // Global variables
+        let renderer, scene, camera;
+        let world, ball, ballBody;
+        let animationFrameId;
+        
+        // Initialize Three.js
+        document.getElementById('init-three').addEventListener('click', () => {
+            try {
+                log('Initializing Three.js...');
+                
+                // Create renderer
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
+                document.body.appendChild(renderer.domElement);
+                
+                // Create camera
+                camera = new THREE.PerspectiveCamera(
+                    75,
+                    window.innerWidth / window.innerHeight,
+                    0.1,
+                    1000
+                );
+                camera.position.set(0, 5, 10);
+                camera.lookAt(0, 0, 0);
+                
+                log('Three.js initialized successfully');
+            } catch (error) {
+                log('Error initializing Three.js: ' + error.message);
+            }
+        });
+        
+        // Create scene
+        document.getElementById('create-scene').addEventListener('click', () => {
+            try {
+                if (!renderer || !camera) {
+                    log('Must initialize Three.js first');
+                    return;
+                }
+                
+                log('Creating scene...');
+                
+                // Create scene
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x87CEEB);
+                
+                // Add lights
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(10, 10, 10);
+                scene.add(directionalLight);
+                
+                // Add ground
+                const groundGeometry = new THREE.PlaneGeometry(20, 20);
+                const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x458B00 });
+                const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+                ground.rotation.x = -Math.PI / 2;
+                scene.add(ground);
+                
+                log('Scene created successfully');
+                
+                // Render once
+                renderer.render(scene, camera);
+            } catch (error) {
+                log('Error creating scene: ' + error.message);
+            }
+        });
+        
+        // Initialize Cannon.js
+        document.getElementById('init-cannon').addEventListener('click', () => {
+            try {
+                log('Initializing Cannon.js physics...');
+                
+                // Create physics world
+                world = new CANNON.World();
+                world.gravity.set(0, -9.82, 0);
+                
+                // Create ground
+                const groundShape = new CANNON.Plane();
+                const groundBody = new CANNON.Body({ mass: 0 });
+                groundBody.addShape(groundShape);
+                groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+                world.addBody(groundBody);
+                
+                log('Cannon.js physics initialized successfully');
+            } catch (error) {
+                log('Error initializing Cannon.js: ' + error.message);
+            }
+        });
+        
+        // Create ball
+        document.getElementById('create-ball').addEventListener('click', () => {
+            try {
+                if (!scene || !world) {
+                    log('Must create scene and initialize physics first');
+                    return;
+                }
+                
+                log('Creating ball...');
+                
+                // Create visual ball
+                const ballRadius = 0.5;
+                const ballGeometry = new THREE.SphereGeometry(ballRadius, 32, 32);
+                const ballMaterial = new THREE.MeshPhongMaterial({ color: 0xD70000 });
+                ball = new THREE.Mesh(ballGeometry, ballMaterial);
+                ball.position.set(0, 5, 0);
+                scene.add(ball);
+                
+                // Create physics ball
+                const ballShape = new CANNON.Sphere(ballRadius);
+                ballBody = new CANNON.Body({
+                    mass: 1,
+                    position: new CANNON.Vec3(0, 5, 0)
+                });
+                ballBody.addShape(ballShape);
+                world.addBody(ballBody);
+                
+                log('Ball created successfully');
+                
+                // Render once
+                renderer.render(scene, camera);
+            } catch (error) {
+                log('Error creating ball: ' + error.message);
+            }
+        });
+        
+        // Animation loop
+        function animate() {
+            try {
+                // Store the animation ID for proper cancellation
+                animationFrameId = requestAnimationFrame(animate);
+                
+                // Check if world exists before stepping
+                if (world) {
+                    // Step physics
+                    world.step(1/60);
+                    
+                    // Only update ball if both ball and ballBody exist
+                    if (ball && ballBody) {
+                        // Update ball position
+                        ball.position.copy(ballBody.position);
+                        ball.quaternion.copy(ballBody.quaternion);
+                    }
+                }
+                
+                // Only render if scene and camera exist
+                if (renderer && scene && camera) {
+                    // Render
+                    renderer.render(scene, camera);
+                }
+            } catch (error) {
+                log('Error in animation loop: ' + error.message);
+                // Make sure to cancel animation if there's an error
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+            }
+        }
+        
+        // Start animation
+        document.getElementById('start-animation').addEventListener('click', () => {
+            try {
+                if (!ball || !ballBody) {
+                    log('Must create ball first');
+                    return;
+                }
+                
+                log('Starting animation...');
+                animate();
+            } catch (error) {
+                log('Error starting animation: ' + error.message);
+            }
+        });
+        
+        // Reset
+        document.getElementById('reset').addEventListener('click', () => {
+            try {
+                log('Resetting...');
+                
+                // First, cancel animation frame to stop the loop
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+                
+                // Remove ball from physics world if both exist
+                if (world && ballBody) {
+                    world.remove(ballBody);
+                }
+                
+                // Remove ball from scene if both exist
+                if (scene && ball) {
+                    scene.remove(ball);
+                }
+                
+                // Remove renderer from DOM if it exists
+                if (renderer && renderer.domElement && renderer.domElement.parentNode) {
+                    renderer.domElement.parentNode.removeChild(renderer.domElement);
+                    renderer.dispose();
+                }
+                
+                // Clear variables - do this after stopping everything that might use them
+                renderer = null;
+                scene = null;
+                camera = null;
+                world = null;
+                ball = null;
+                ballBody = null;
+                
+                log('Reset complete');
+            } catch (error) {
+                log('Error resetting: ' + error.message);
+            }
+        });
+        
+        // Log initial message
+        log('Debug mode ready. Click buttons in sequence to test each component.');
+    </script>
+</body>
+</html>

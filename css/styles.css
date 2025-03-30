@@ -1,0 +1,230 @@
+/* Global Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    overflow: hidden;
+    background-color: #222;
+    color: #fff;
+}
+
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Loading Screen */
+#loading-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+.loader {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#loading-progress {
+    font-size: 20px;
+    color: white;
+}
+
+/* Game UI */
+#game-ui {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#score-container {
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    gap: 20px;
+}
+
+#score, #overs {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+#target-container {
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 1.2rem;
+}
+
+/* Game Controls */
+#game-controls {
+    position: absolute;
+    bottom: 50px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    z-index: 2;
+}
+
+#mobile-controls {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+#hit-button {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 20px 40px;
+    font-size: 24px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#hit-button:active {
+    background-color: #d32f2f;
+    transform: scale(0.98);
+}
+
+/* Game Messages */
+#game-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    font-size: 24px;
+    text-align: center;
+    z-index: 3;
+}
+
+/* Start & End Screens */
+#start-screen, #end-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+}
+
+#start-screen h1, #end-screen h1 {
+    font-size: 3rem;
+    margin-bottom: 30px;
+    color: #f44336;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+#start-button, #restart-button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    font-size: 1.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 30px;
+    transition: background-color 0.3s;
+}
+
+#start-button:hover, #restart-button:hover {
+    background-color: #388E3C;
+}
+
+#instructions {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 600px;
+    text-align: center;
+}
+
+#instructions h2 {
+    margin-bottom: 15px;
+    color: #4CAF50;
+}
+
+#instructions p {
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+#result-message, #final-score {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    #score, #overs {
+        font-size: 1.2rem;
+    }
+    
+    #target-container {
+        font-size: 1rem;
+    }
+    
+    #start-screen h1, #end-screen h1 {
+        font-size: 2rem;
+    }
+    
+    #start-button, #restart-button {
+        font-size: 1.2rem;
+        padding: 12px 24px;
+    }
+    
+    #instructions p {
+        font-size: 0.9rem;
+    }
+}

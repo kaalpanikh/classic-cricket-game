@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nokia Cricket Cup - Simple Version</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; }
+        canvas { display: block; }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-family: Arial, sans-serif;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #start-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        #console {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            width: 400px;
+            height: 200px;
+            background: rgba(0,0,0,0.7);
+            color: #0f0;
+            font-family: monospace;
+            padding: 10px;
+            overflow-y: auto;
+            font-size: 12px;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h2>Nokia Cricket Cup - Simple Version</h2>
+        <p>A basic implementation to test core functionality</p>
+        <button id="start-button">Start Game</button>
+    </div>
+    <div id="console"></div>
+
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cannon@0.6.2/build/cannon.min.js"></script>
+
+    <script>
+        // Console logging
+        const consoleElement = document.getElementById('console');
+        function log(message) {
+            const entry = document.createElement('div');
+            entry.textContent = message;
+            consoleElement.appendChild(entry);
+            consoleElement.scrollTop = consoleElement.scrollHeight;
+            console.log(message);
+        }
+
+        // Basic game implementation
+        class SimpleGame {
+            constructor() {
+                this.initialize();
+            }
+
+            initialize() {
+                try {
+                    log('Initializing game...');
+
+                    // Set up Three.js
+                    this.setupThree();
+                    log('Three.js initialized');
+
+                    // Set up Cannon.js
+                    this.setupCannon();
+                    log('Cannon.js initialized');
+
+                    // Create scene objects
+                    this.createObjects();
+                    log('Scene objects created');
+
+                    // Add event listeners
+                    window.addEventListener('resize', () => this.onWindowResize());
+                    document.getElementById('start-button').addEventListener('click', () => this.startGame());
+
+                    // Start animation loop
+                    this.animate();
+                    log('Animation loop started');
+
+                    log('Game initialized successfully');
+                } catch (error) {
+                    log('Error initializing game: ' + error.message);
+                }
+            }
+
+            setupThree() {
+                // Create scene
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x87CEEB);
+
+                // Create camera
+                this.camera = new THREE.PerspectiveCamera(
+                    75,
+                    window.innerWidth / window.innerHeight,
+                    0.1,
+                    1000
+                );
+                this.camera.position.set(0, 5, 15);
+                this.camera.lookAt(0, 0, 0);
+
+                // Create renderer
+                this.renderer = new THREE.WebGLRenderer({ antialias: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(window.devicePixelRatio);
+                document.body.appendChild(this.renderer.domElement);
+
+                // Add lights
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                this.scene.add(ambientLight);
+
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(10, 10, 10);
+                this.scene.add(directionalLight);
+            }
+
+            setupCannon() {
+                // Create physics world
+                this.world = new CANNON.World();
+                this.world.gravity.set(0, -9.82, 0);
+                this.world.broadphase = new CANNON.SAPBroadphase(this.world);
+                this.world.solver.iterations = 10;
+
+                // Create materials
+                this.groundMaterial = new CANNON.Material('ground');
+                this.ballMaterial = new CANNON.Material('ball');
+
+                // Create ground physics
+                const groundShape = new CANNON.Plane();
+                this.groundBody = new CANNON.Body({
+                    mass: 0,
+                    material: this.groundMaterial
+                });
+                this.groundBody.addShape(groundShape);
+                this.groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+                this.world.addBody(this.groundBody);
+            }
+
+            createObjects() {
+                // Create cricket pitch (ground)
+                const groundGeometry = new THREE.PlaneGeometry(50, 50);
+                const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x458B00 });
+                this.ground = new THREE.Mesh(groundGeometry, groundMaterial);
+                this.ground.rotation.x = -Math.PI / 2;
+                this.ground.receiveShadow = true;
+                this.scene.add(this.ground);
+
+                // Create cricket ball
+                const ballRadius = 0.12;
+                const ballGeometry = new THREE.SphereGeometry(ballRadius, 16, 16);
+                const ballMaterial = new THREE.MeshPhongMaterial({ color: 0xD70000 });
+                this.ball = new THREE.Mesh(ballGeometry, ballMaterial);
+                this.ball.position.set(0, 5, 0);
+                this.ball.castShadow = true;
+                this.scene.add(this.ball);
+
+                // Create ball physics
+                const ballShape = new CANNON.Sphere(ballRadius);
+                this.ballBody = new CANNON.Body({
+                    mass: 0.15,
+                    material: this.ballMaterial,
+                    position: new CANNON.Vec3(0, 5, 0)
+                });
+                this.ballBody.addShape(ballShape);
+                this.world.addBody(this.ballBody);
+
+                // Create simple bat (just for visualization)
+                const batGeometry = new THREE.BoxGeometry(0.2, 0.05, 0.8);
+                const batMaterial = new THREE.MeshPhongMaterial({ color: 0xC19A6B });
+                this.bat = new THREE.Mesh(batGeometry, batMaterial);
+                this.bat.position.set(0, 0.5, 5);
+                this.scene.add(this.bat);
+            }
+
+            startGame() {
+                log('Game started!');
+                
+                // Launch the ball
+                this.ballBody.position.set(0, 1, -5);
+                this.ballBody.velocity.set(0, 2, 8); // Throw the ball toward the player
+                
+                // Add space bar control for batting
+                document.addEventListener('keydown', (event) => {
+                    if (event.code === 'Space') {
+                        this.hitBall();
+                    }
+                });
+                
+                log('Press SPACE to hit the ball when it gets close!');
+            }
+            
+            hitBall() {
+                // Only hit if the ball is close to the bat
+                const ballPos = this.ballBody.position;
+                if (ballPos.z > 3 && ballPos.z < 6) {
+                    log('Ball hit!');
+                    
+                    // Apply force to the ball
+                    this.ballBody.velocity.set(
+                        Math.random() * 8 - 4,  // Random x direction
+                        8,                      // Upward
+                        -15                     // Away from the player
+                    );
+                } else {
+                    log('Swing and a miss!');
+                }
+            }
+
+            onWindowResize() {
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+
+                // Step physics world
+                this.world.step(1/60);
+
+                // Update ball position
+                this.ball.position.copy(this.ballBody.position);
+                this.ball.quaternion.copy(this.ballBody.quaternion);
+
+                // Render scene
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+
+        // Start the game when page is loaded
+        window.addEventListener('load', () => {
+            try {
+                log('Page loaded, checking for WebGL support...');
+                
+                // Check for WebGL support
+                const canvas = document.createElement('canvas');
+                const hasWebGL = !!(window.WebGLRenderingContext && 
+                    (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+                
+                if (!hasWebGL) {
+                    log('ERROR: WebGL not supported by your browser');
+                    return;
+                }
+                
+                log('WebGL supported, initializing game...');
+                new SimpleGame();
+            } catch (error) {
+                log('ERROR: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

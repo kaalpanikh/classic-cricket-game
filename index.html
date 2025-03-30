@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nokia Cricket Cup</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+</head>
+<body>
+    <div id="game-container">
+        <div id="loading-screen">
+            <div class="loader"></div>
+            <div id="loading-progress">Loading: 0%</div>
+        </div>
+        <div id="game-ui">
+            <div id="score-container">
+                <div id="score">0/0</div>
+                <div id="overs">0.0/20.0</div>
+            </div>
+            <div id="target-container">Target: <span id="target">--</span></div>
+        </div>
+        <div id="game-controls">
+            <div id="mobile-controls" class="hidden">
+                <button id="hit-button">HIT</button>
+            </div>
+        </div>
+        <div id="game-message" class="hidden"></div>
+        <div id="start-screen">
+            <h1>Nokia Cricket Cup</h1>
+            <button id="start-button">Start Game</button>
+            <div id="instructions">
+                <h2>How to Play</h2>
+                <p>Desktop: Press SPACE to hit the ball</p>
+                <p>Mobile: Tap the HIT button</p>
+                <p>Timing is crucial for good shots!</p>
+            </div>
+        </div>
+        <div id="end-screen" class="hidden">
+            <h1>Game Over</h1>
+            <div id="result-message"></div>
+            <div id="final-score"></div>
+            <button id="restart-button">Play Again</button>
+        </div>
+    </div>
+
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cannon@0.6.2/build/cannon.min.js"></script>
+    
+    <!-- Game Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/models.js"></script>
+    <script src="js/physics.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/controls.js"></script>
+    
+    <!-- Debug Script -->
+    <script>
+        // Display any errors in the console and on screen
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error('Error: ', message, 'at', source, 'line', lineno);
+            const errorDiv = document.createElement('div');
+            errorDiv.style.position = 'fixed';
+            errorDiv.style.top = '10px';
+            errorDiv.style.left = '10px';
+            errorDiv.style.backgroundColor = 'rgba(255, 0, 0, 0.8)';
+            errorDiv.style.color = 'white';
+            errorDiv.style.padding = '10px';
+            errorDiv.style.zIndex = '9999';
+            errorDiv.textContent = `Error: ${message} at line ${lineno}`;
+            document.body.appendChild(errorDiv);
+            return false;
+        };
+        
+        // Check for WebGL support
+        function checkWebGLSupport() {
+            try {
+                const canvas = document.createElement('canvas');
+                return !!(window.WebGLRenderingContext && 
+                        (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+            } catch (e) {
+                return false;
+            }
+        }
+        
+        // Add WebGL check before game initialization
+        window.WEBGL = {
+            isWebGLAvailable: checkWebGLSupport,
+            getWebGLErrorMessage: function() {
+                const element = document.createElement('div');
+                element.id = 'webgl-error-message';
+                element.style.fontFamily = 'monospace';
+                element.style.fontSize = '13px';
+                element.style.fontWeight = 'normal';
+                element.style.textAlign = 'center';
+                element.style.background = '#fff';
+                element.style.color = '#000';
+                element.style.padding = '1.5em';
+                element.style.width = '400px';
+                element.style.margin = '5em auto 0';
+                element.innerHTML = 'Your browser does not seem to support WebGL.<br/>' +
+                    'Find out how to get it <a href="http://get.webgl.org/">here</a>.';
+                return element;
+            }
+        };
+    </script>
+    
+    <script src="js/main.js"></script>
+</body>
+</html>
