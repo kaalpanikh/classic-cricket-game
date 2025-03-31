@@ -31,7 +31,10 @@ class CricketGame {
             battingTeam: true, // true = player batting, false = player bowling
             
             // Ball counting protection
-            currentBallCounted: false  // Flag to ensure we only count each ball once
+            currentBallCounted: false,  // Flag to ensure we only count each ball once
+            
+            // New flag to track if initial message has been shown
+            initialMessageShown: false
         };
         
         // DOM elements
@@ -88,6 +91,9 @@ class CricketGame {
         
         // Store the last scored runs
         this.lastScoredRuns = 0;
+        
+        // Detect if device is mobile
+        this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
     
     setupKeyboardControls() {
@@ -143,8 +149,8 @@ class CricketGame {
             // Add the event listener
             document.addEventListener('keydown', this.keydownHandler);
             
-            // Show welcome message
-            showGameMessage("Welcome to Nokia Cricket Cup!", 2000);
+            // Only show initial message on desktop
+            this.showInitialMessage();
             
             // Start the game and bowl the first ball
             this.state.playing = true;
@@ -209,11 +215,6 @@ class CricketGame {
             
             // Update the ball counter
             this.state.balls++;
-            
-            // Show initial message with brief delay
-            setTimeout(() => {
-                showGameMessage("Press SPACE when ball is close!", 1000);
-            }, 300);
             
             // Update score display
             this.updateScoreDisplay();
@@ -328,11 +329,6 @@ class CricketGame {
             // Ensure forces are applied
             ballBody.wakeUp();
             
-            // TIMING IMPROVEMENT: Delay hit message to allow seeing the bat swing first
-            setTimeout(() => {
-                showGameMessage("Great Hit!", 1500);
-            }, 400);
-            
             // 4. Score the run based on hit quality (GUARANTEED, not random)
             let runs = 0;
             let runMessage = "";
@@ -360,15 +356,15 @@ class CricketGame {
                 // Log the actual runs added
                 console.log(`Added ${runs} runs to scorecard. New total: ${this.state.runs}`);
                 
-                // Show run message
-                showGameMessage(runMessage, 2500);
-            }, 1500);
+                // Show run message with REDUCED duration (1000ms instead of 2500ms)
+                showGameMessage(runMessage, 1000);
+            }, 1000); // Reduced from 1500ms to 1000ms
             
             // Set ball as no longer in play
             this.state.ballInPlay = false;
             
             // TIMING IMPROVEMENT: Longer delay before next ball for better pacing
-            this.prepareForNextBall(4000);
+            this.prepareForNextBall(3000); // Reduced from 4000ms to 3000ms
         } else {
             // Missed the ball
             console.log("Missed! Ball Z position:", ballPos.z);
@@ -376,11 +372,6 @@ class CricketGame {
             // CRITICAL FIX: Only register miss if within reasonable distance
             // This prevents "Missed" messages when clicking far from the ball
             if (ballPos.z > -2 && ballPos.z < 10) {
-                // TIMING IMPROVEMENT: Delay miss message for better visual feedback
-                setTimeout(() => {
-                    showGameMessage("Missed!", 1500);
-                }, 400);
-                
                 // Set a timer to bowl the next ball after a miss
                 setTimeout(() => {
                     // Only bowl next ball if still in play
@@ -536,8 +527,8 @@ class CricketGame {
     }
     
     updateScoreDisplay() {
+        // Only update the score element now
         this.scoreElement.textContent = `${this.state.runs}/${this.state.wickets}`;
-        this.oversElement.textContent = `${formatOvers(this.state.balls)}/${this.state.maxOvers}.0`;
     }
     
     setCameraToBattingView() {
@@ -648,6 +639,9 @@ class CricketGame {
         
         this.ballCounter = 0;
         this.dotBallTimer = null;
+        
+        // Reset initial message shown flag
+        this.state.initialMessageShown = false;
     }
     
     setCameraForGameStart() {
@@ -697,5 +691,15 @@ class CricketGame {
         
         // Show end screen
         this.endScreen.classList.remove('hidden');
+    }
+    
+    // Show the initial message only on desktop and only once
+    showInitialMessage() {
+        // Only show on desktop and only if not shown before
+        if (!this.isMobile && !this.state.initialMessageShown) {
+            showGameMessage("Press SPACE when ball is close!", 2000);
+            this.state.initialMessageShown = true;
+            console.log("Showing initial desktop message");
+        }
     }
 }
