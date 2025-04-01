@@ -22,6 +22,3 @@ A modern web-based recreation of the classic Nokia Cricket Cup game using Three.
 ## Controls
 - Desktop: Space bar to hit the ball
 - Mobile: Tap the screen to hit the ball
-
-## License
-MIT
